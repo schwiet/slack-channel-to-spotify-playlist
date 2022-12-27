@@ -1,17 +1,22 @@
-package spotify
+package main
 
 import (
-	"github.com/schwiet/slack-spotify/lambda/util"
-	"net/http"
+	"github.com/aws/aws-lambda-go/events"
+	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/schwiet/slack-spotify/util"
 	"net/url"
 	"os"
 )
 
-func AuthorizeHandler(w http.ResponseWriter, r *http.Request) {
+func main() {
+	lambda.Start(AuthorizeHandler)
+}
+
+func AuthorizeHandler() (response events.APIGatewayProxyResponse, err error) {
 	clientId, ok := os.LookupEnv("CLIENT_ID")
 
 	if !ok {
-		http.Error(w, "no CLIENT_ID in env", 400)
+		response = events.APIGatewayProxyResponse{StatusCode: 400}
 		return
 	}
 
@@ -25,8 +30,11 @@ func AuthorizeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	spURL := AuthorizeURL(clientId, cbURL.String(), state)
-	// http.Error(w, spURL.String(), 501)
-	http.Redirect(w, r, spURL.String(), 303)
+	response = events.APIGatewayProxyResponse{
+		StatusCode: 303,
+		Headers:    map[string]string{"Location": spURL.String()},
+	}
+	return
 }
 
 /*
