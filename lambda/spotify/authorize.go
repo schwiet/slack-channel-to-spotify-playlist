@@ -8,6 +8,15 @@ import (
 	"os"
 )
 
+var cbURL url.URL = url.URL{
+	Scheme: "https",
+	// TODO: get Host from request?
+	Host: "localhost:8008",
+	Path: "authorize-callback",
+}
+
+var AUTH_CB_URI string = cbURL.String()
+
 func main() {
 	lambda.Start(AuthorizeHandler)
 }
@@ -17,23 +26,18 @@ func AuthorizeHandler() (events.APIGatewayProxyResponse, error) {
 
 	if !ok {
 		return events.APIGatewayProxyResponse{
-			StatusCode: 400,
+			StatusCode: 500,
 			Body:       `"No Spotify Client ID in env"`,
 		}, nil
 	}
 
 	// get a random state string. This will be returned by the Spotify API
+	// we'll use it to store the redirect_uri, since it is needed by the callback
 	state := util.RandStringBytesMaskImprSrcUnsafe(64)
-	// TODO: may want to utilize this state by storing and retrieving in callback
-	//       to verify that the callback request had a legitimate origin
 
-	cbURL := url.URL{
-		Scheme: "http",
-		Host:   "localhost:8008",
-		Path:   "auth-callback",
-	}
+	// TODO: write state:expiration to database for retrieval in callback
 
-	spURL := AuthorizeURL(clientId, cbURL.String(), state)
+	spURL := AuthorizeURL(clientId, AUTH_CB_URI, state)
 	return events.APIGatewayProxyResponse{
 		StatusCode: 303,
 		Headers:    map[string]string{"Location": spURL.String()},

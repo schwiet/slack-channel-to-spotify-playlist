@@ -14,3 +14,20 @@ services:
     ports:
       - "9000:8080"
     platform: "linux/amd64"
+
+  spotify-auth-cb:
+    build:
+      context: .
+      args:
+        FUNC_PATH: "./spotify/authorize-callback.go"
+      tags:
+        - "sp-auth-cb:0.1"
+      platforms:
+        - "linux/amd64"
+
+    environment:
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+      SPOTIFY_CLIENT_SECRET: ${SPOTIFY_CLIENT_SECRET}
+    ports:
+      - "9001:8080"
+    platform: "linux/amd64"
