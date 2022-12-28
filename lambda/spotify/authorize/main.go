@@ -12,16 +12,20 @@ func main() {
 	lambda.Start(AuthorizeHandler)
 }
 
-func AuthorizeHandler() (response events.APIGatewayProxyResponse, err error) {
-	clientId, ok := os.LookupEnv("CLIENT_ID")
+func AuthorizeHandler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+	clientId, ok := os.LookupEnv("SPOTIFY_CLIENT_ID")
 
 	if !ok {
-		response = events.APIGatewayProxyResponse{StatusCode: 400}
-		return
+		return events.APIGatewayProxyResponse{
+			StatusCode: 400,
+			Body:       `"No Spotify Client ID in env"`,
+		}, nil
 	}
 
 	// get a random state string. This will be returned by the Spotify API
 	state := util.RandStringBytesMaskImprSrcUnsafe(64)
+	// TODO: may want to utilize this state by storing and retrieving in callback
+	//       to verify that the callback request had a legitimate origin
 
 	cbURL := url.URL{
 		Scheme: "http",
@@ -30,11 +34,10 @@ func AuthorizeHandler() (response events.APIGatewayProxyResponse, err error) {
 	}
 
 	spURL := AuthorizeURL(clientId, cbURL.String(), state)
-	response = events.APIGatewayProxyResponse{
+	return events.APIGatewayProxyResponse{
 		StatusCode: 303,
 		Headers:    map[string]string{"Location": spURL.String()},
-	}
-	return
+	}, nil
 }
 
 /*
