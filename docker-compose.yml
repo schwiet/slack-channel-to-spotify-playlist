@@ -1,0 +1,16 @@
+services:
+  spotify-auth:
+    build:
+      context: .
+      args:
+        FUNC_PATH: "./spotify/authorize.go"
+      tags:
+        - "sp-auth:0.1"
+      platforms:
+        - "linux/amd64"
+
+    environment:
+      SPOTIFY_CLIENT_ID: ${SPOTIFY_CLIENT_ID}
+    ports:
+      - "9000:8080"
+    platform: "linux/amd64"

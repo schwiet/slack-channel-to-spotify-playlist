@@ -8,7 +8,8 @@ RUN go mod download & go mod verify
 
 # build
 COPY lambda .
-RUN go build -o handler ./spotify/authorize/main.go
+ARG FUNC_PATH
+RUN go build -o handler $FUNC_PATH
 
 # copy artifacts to a clean image
 FROM public.ecr.aws/lambda/go:1

@@ -12,7 +12,7 @@ func main() {
 	lambda.Start(AuthorizeHandler)
 }
 
-func AuthorizeHandler(req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
+func AuthorizeHandler() (events.APIGatewayProxyResponse, error) {
 	clientId, ok := os.LookupEnv("SPOTIFY_CLIENT_ID")
 
 	if !ok {
