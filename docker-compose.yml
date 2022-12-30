@@ -3,7 +3,7 @@ services:
     build:
       context: .
       args:
-        FUNC_PATH: "./spotify/authorize.go"
+        FUNC_PATH: "./lambda/spotify-authorize.go"
       tags:
         - "sp-auth:0.1"
       platforms:
@@ -19,7 +19,7 @@ services:
     build:
       context: .
       args:
-        FUNC_PATH: "./spotify/authorize-callback.go"
+        FUNC_PATH: "./lambda/spotify-authorize-callback.go"
       tags:
         - "sp-auth-cb:0.1"
       platforms:

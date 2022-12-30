@@ -2,18 +2,25 @@ package main
 
 import (
 	"context"
-	"encoding/base64"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/schwiet/slack-spotify/spotify"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"os"
-	"strconv"
-	"strings"
 	"time"
 )
+
+var cbURL url.URL = url.URL{
+	Scheme: "https",
+	// TODO: get Host from request?
+	Host: "localhost:8008",
+	Path: "authorize-callback",
+}
+
+var AUTH_CB_URI string = cbURL.String()
 
 func main() {
 	lambda.Start(AuthorizeCallbackHandler)
@@ -56,18 +63,11 @@ func AuthorizeCallbackHandler(ctx context.Context, req events.APIGatewayProxyReq
 
 	// TODO: validate state
 
-	// https://developer.spotify.com/documentation/general/guides/authorization/code-flow/#request-access-token
-	// URL-encode the body that is required by the api/token spotify endpoint
-	tokenRequest := url.Values{}
-	tokenRequest.Set("grant_type", "authorization_code")
-	tokenRequest.Set("code", code)
-	tokenRequest.Set("redirect_uri", AUTH_CB_URI)
-	encodedRequest := tokenRequest.Encode()
-
-	tokenPost, err := http.NewRequest(
-		"POST",
-		"https://accounts.spotify.com/api/token",
-		strings.NewReader(encodedRequest),
+	tokenPost, err := spotify.GetTokenRequest(
+		code,
+		AUTH_CB_URI,
+		clientId,
+		clientSecret,
 	)
 	if err != nil {
 		return events.APIGatewayProxyResponse{
@@ -75,13 +75,6 @@ func AuthorizeCallbackHandler(ctx context.Context, req events.APIGatewayProxyReq
 			Body:       err.Error(),
 		}, nil
 	}
-
-	auth := base64.StdEncoding.EncodeToString(
-		[]byte(clientId + ":" + clientSecret))
-
-	tokenPost.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-	tokenPost.Header.Add("Authorization", "Basic "+auth)
-	tokenPost.Header.Add("Content-Length", strconv.Itoa(len(encodedRequest)))
 
 	client := &http.Client{
 		Timeout: time.Second * 10,

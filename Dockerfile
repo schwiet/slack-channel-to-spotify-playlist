@@ -7,7 +7,7 @@ COPY go.mod go.sum ./
 RUN go mod download & go mod verify
 
 # build
-COPY lambda .
+COPY pkg .
 ARG FUNC_PATH
 RUN go build -o handler $FUNC_PATH
 
