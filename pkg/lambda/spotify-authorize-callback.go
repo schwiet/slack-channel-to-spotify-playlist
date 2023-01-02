@@ -5,19 +5,25 @@ import (
 	"fmt"
 	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
+	"github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/schwiet/slack-spotify/spotify"
-	"net/url"
+	"log"
 	"os"
 )
 
-var cbURL url.URL = url.URL{
-	Scheme: "https",
-	// TODO: get Host from request?
-	Host: "localhost:8008",
-	Path: "authorize-callback",
+var db dynamodb.Client
+
+func init() {
+	sdkConfig, err := config.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	db = *dynamodb.NewFromConfig(sdkConfig)
 }
 
-var AUTH_CB_URI string = cbURL.String()
+var AUTH_CB_URI string = spotify.GetRedirectURI("localhost:8008")
 
 func main() {
 	lambda.Start(AuthorizeCallbackHandler)
